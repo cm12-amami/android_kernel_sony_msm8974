@@ -38,11 +38,6 @@ static bool nf_generic_should_process(u8 proto)
 	}
 }
 
-static inline struct nf_generic_net *generic_pernet(struct net *net)
-{
-	return &net->ct.nf_ct_proto.generic;
-}
-
 static bool generic_pkt_to_tuple(const struct sk_buff *skb,
 				 unsigned int dataoff,
 				 struct nf_conntrack_tuple *tuple)
