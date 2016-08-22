@@ -3049,7 +3049,6 @@ static int __iw_softap_setwpsie(struct net_device *dev,
          case DOT11F_EID_WPA: 
             if (wps_genie[1] < 2 + 4)
             {
-               vos_mem_free(pSap_WPSIe); 
                ret = -EINVAL;
                goto exit;
             }
