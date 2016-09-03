@@ -3247,6 +3247,7 @@ void tcp_done(struct sock *sk)
 }
 EXPORT_SYMBOL_GPL(tcp_done);
 
+<<<<<<< HEAD
 int tcp_abort(struct sock *sk, int err)
 {
 	if (sk->sk_state == TCP_TIME_WAIT) {
@@ -3284,6 +3285,8 @@ int tcp_abort(struct sock *sk, int err)
 }
 EXPORT_SYMBOL_GPL(tcp_abort);
 
+=======
+>>>>>>> parent of 50e87fb... net: diag: Support destroying TCP sockets.
 extern struct tcp_congestion_ops tcp_reno;
 
 static __initdata unsigned long thash_entries;
