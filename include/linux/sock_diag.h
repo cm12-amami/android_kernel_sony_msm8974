@@ -30,7 +30,6 @@ struct sock;
 struct sock_diag_handler {
 	__u8 family;
 	int (*dump)(struct sk_buff *skb, struct nlmsghdr *nlh);
-	int (*destroy)(struct sk_buff *skb, struct nlmsghdr *nlh);
 };
 
 int sock_diag_register(struct sock_diag_handler *h);
@@ -45,7 +44,5 @@ void sock_diag_save_cookie(void *sk, __u32 *cookie);
 int sock_diag_put_meminfo(struct sock *sk, struct sk_buff *skb, int attr);
 
 extern struct sock *sock_diag_nlsk;
-
-int sock_diag_destroy(struct sock *sk, int err);
 #endif /* KERNEL */
 #endif
