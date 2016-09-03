@@ -12,7 +12,6 @@
 #include <linux/export.h>
 #include <linux/capability.h>
 #include <linux/mnt_namespace.h>
-#include <linux/user_namespace.h>
 #include <linux/namei.h>
 #include <linux/security.h>
 #include <linux/idr.h>
@@ -21,7 +20,6 @@
 #include <linux/fs_struct.h>	/* get_fs_root et.al. */
 #include <linux/fsnotify.h>	/* fsnotify_vfsmount_delete */
 #include <linux/uaccess.h>
-#include <linux/proc_fs.h>
 #include "pnode.h"
 #include "internal.h"
 
