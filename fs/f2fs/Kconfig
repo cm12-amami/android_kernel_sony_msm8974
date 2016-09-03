@@ -88,4 +88,4 @@ config F2FS_FAULT_INJECTION
 	help
 	  Test F2FS to inject faults such as ENOMEM, ENOSPC, and so on.
 
-If unsure, say N.
+	  If unsure, say N.
