@@ -35,6 +35,11 @@ static DEFINE_IDR(ctrl_idr);
 static struct device_type spmi_dev_type;
 static struct device_type spmi_ctrl_type;
 
+#if (!defined(CONFIG_MACH_CT01) && !defined(CONFIG_MACH_CT01_CHN_CU))
+/* for global use */
+struct spmi_controller *spmi_ctrl_extra;
+#endif
+
 /* Forward declarations */
 struct bus_type spmi_bus_type;
 static int spmi_register_controller(struct spmi_controller *ctrl);
