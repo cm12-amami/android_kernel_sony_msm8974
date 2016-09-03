@@ -1268,14 +1268,14 @@ static int st_open(struct inode *inode, struct file *filp)
  err_out:
 	normalize_buffer(STp->buffer);
 	STp->in_use = 0;
-	scsi_tape_put(STp);
 	if (resumed)
 		scsi_autopm_put_device(STp->device);
+	scsi_tape_put(STp);
 	mutex_unlock(&st_mutex);
 	return retval;
 
 }
-
+
 
 /* Flush the tape buffer before close */
 static int st_flush(struct file *filp, fl_owner_t id)
