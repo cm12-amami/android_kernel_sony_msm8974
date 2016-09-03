@@ -164,8 +164,7 @@ static int sock_diag_rcv_msg(struct sk_buff *skb, struct nlmsghdr *nlh)
 
 		return ret;
 	case SOCK_DIAG_BY_FAMILY:
-	case SOCK_DESTROY_BACKPORT:
-		return __sock_diag_cmd(skb, nlh);
+		return __sock_diag_rcv_msg(skb, nlh);
 	default:
 		return -EINVAL;
 	}
@@ -179,18 +178,6 @@ static void sock_diag_rcv(struct sk_buff *skb)
 	netlink_rcv_skb(skb, &sock_diag_rcv_msg);
 	mutex_unlock(&sock_diag_mutex);
 }
-
-int sock_diag_destroy(struct sock *sk, int err)
-{
-	if (!ns_capable(sock_net(sk)->user_ns, CAP_NET_ADMIN))
-		return -EPERM;
-
-	if (!sk->sk_prot->diag_destroy)
-		return -EOPNOTSUPP;
-
-	return sk->sk_prot->diag_destroy(sk, err);
-}
-EXPORT_SYMBOL_GPL(sock_diag_destroy);
 
 struct sock *sock_diag_nlsk;
 EXPORT_SYMBOL_GPL(sock_diag_nlsk);
