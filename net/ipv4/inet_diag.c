@@ -342,7 +342,7 @@ out_nosk:
 }
 EXPORT_SYMBOL_GPL(inet_diag_dump_one_icsk);
 
-static int inet_diag_get_exact(struct sk_buff *in_skb,
+static int inet_diag_cmd_exact(int cmd, struct sk_buff *in_skb,
 			       const struct nlmsghdr *nlh,
 			       struct inet_diag_req_v2 *req)
 {
@@ -352,8 +352,12 @@ static int inet_diag_get_exact(struct sk_buff *in_skb,
 	handler = inet_diag_lock_handler(req->sdiag_protocol);
 	if (IS_ERR(handler))
 		err = PTR_ERR(handler);
-	else
+	else if (cmd == SOCK_DIAG_BY_FAMILY)
 		err = handler->dump_one(in_skb, nlh, req);
+	else if (cmd == SOCK_DESTROY_BACKPORT && handler->destroy)
+		err = handler->destroy(in_skb, req);
+	else
+		err = -EOPNOTSUPP;
 	inet_diag_unlock_handler(handler);
 
 	return err;
