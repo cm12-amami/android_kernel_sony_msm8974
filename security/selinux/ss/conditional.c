@@ -624,7 +624,7 @@ void cond_compute_av(struct avtab *ctab, struct avtab_key *key, struct av_decisi
 {
 	struct avtab_node *node;
 
-	if (!ctab || !key || !avd)
+	if (!ctab || !key || !avd || !xperms)
 		return;
 
 	for (node = avtab_search_node(ctab, key); node;
@@ -643,6 +643,9 @@ void cond_compute_av(struct avtab *ctab, struct avtab_key *key, struct av_decisi
 		if ((u16)(AVTAB_AUDITALLOW|AVTAB_ENABLED) ==
 		    (node->key.specified & (AVTAB_AUDITALLOW|AVTAB_ENABLED)))
 			avd->auditallow |= node->datum.data;
+		if (xperms && (node->key.specified & AVTAB_ENABLED) &&
+				(node->key.specified & AVTAB_XPERMS))
+			services_compute_xperms_drivers(xperms, node);
 	}
 	return;
 }
