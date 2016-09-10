@@ -196,6 +196,7 @@ have_file:
 		fput(*lower_file);
 		*lower_file = NULL;
 		rc = -EMEDIUMTYPE;
+	}
 out_unlock:
 	mutex_unlock(&req->mux);
 out_free:
