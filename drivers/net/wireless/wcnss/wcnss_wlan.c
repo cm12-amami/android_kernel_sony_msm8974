@@ -1089,6 +1089,13 @@ static void wcnss_smd_notify_event(void *data, unsigned int event)
 	}
 }
 
+#if defined(CONFIG_PRIMA_WLAN) && !defined(CONFIG_PRIMA_WLAN_MODULE)
+static struct platform_device wcnss_ready = {
+	.name = "wcnss_ready",
+	.id = -1,
+};
+#endif
+
 static void wcnss_post_bootup(struct work_struct *work)
 {
 	if (do_not_cancel_vote == 1) {
@@ -1097,6 +1104,10 @@ static void wcnss_post_bootup(struct work_struct *work)
 	}
 
 	pr_info("%s: Cancel APPS vote for Iris & WCNSS\n", __func__);
+
+#if defined(CONFIG_PRIMA_WLAN) && !defined(CONFIG_PRIMA_WLAN_MODULE)
+	platform_device_register(&wcnss_ready);
+#endif
 
 	/* Since WCNSS is up, cancel any APPS vote for Iris & WCNSS VREGs  */
 	wcnss_wlan_power(&penv->pdev->dev, &penv->wlan_config,
