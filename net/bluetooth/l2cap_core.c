@@ -5430,7 +5430,7 @@ static void l2cap_logical_link_complete(struct hci_chan *chan, u8 status)
 	struct hci_chan *ampchan;
 	struct hci_conn *ampcon;
 
-	BT_DBG("status %d, chan %p, conn %p", (int) status, chan, chan->conn);
+	BT_DBG("status %d, chan %pK, conn %pK", (int) status, chan, chan->conn);
 
 	sk = chan->l2cap_sk;
 	chan->l2cap_sk = NULL;

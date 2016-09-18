@@ -2431,7 +2431,7 @@ static inline void hci_hardware_error_evt(struct hci_dev *hdev,
 {
 	struct hci_ev_hardware_error *ev = (void *) skb->data;
 
-	BT_ERR("hdev=%p, hw_err_code = %u", hdev, ev->hw_err_code);
+	BT_ERR("hdev=%pK, hw_err_code = %u", hdev, ev->hw_err_code);
 
 	if (hdev && hdev->dev_type == HCI_BREDR) {
 		hci_dev_lock_bh(hdev);
