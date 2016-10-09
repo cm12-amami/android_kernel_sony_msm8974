@@ -2563,7 +2563,7 @@ static int __validate_send_modfd_resp_inputs(struct qseecom_dev_handle *data,
 			(resp->resp_len > this_lstnr->sb_length)) {
 		pr_err("resp buf length %d not valid\n", resp->resp_len);
 		return -EINVAL;
-
+	}
 	if ((uintptr_t)resp->resp_buf_ptr > (ULONG_MAX - resp->resp_len)) {
 		pr_err("Integer overflow in resp_len & resp_buf\n");
 		return -EINVAL;
