@@ -276,7 +276,7 @@ static int msm_lsm_open(struct snd_pcm_substream *substream)
 	init_waitqueue_head(&prtd->event_wait);
 	runtime->private_data = prtd;
 
-	prtd->lsm_client->opened = false
+	prtd->lsm_client->opened = false;
 	return 0;
 }
 
