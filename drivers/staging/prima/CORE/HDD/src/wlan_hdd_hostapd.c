@@ -2988,20 +2988,6 @@ static int iw_get_mode(struct net_device *dev,
     return ret;
 }
 
-static int iw_softap_setwpsie(struct net_device *dev,
-                              struct iw_request_info *info,
-                              union iwreq_data *wrqu,
-                              char *extra)
-{
-    int ret;
-
-    vos_ssr_protect(__func__);
-    ret = __iw_softap_setwpsie(dev, info, wrqu, extra);
-    vos_ssr_unprotect(__func__);
-
-    return ret;
-}
-
 static int __iw_softap_stopbss(struct net_device *dev,
                              struct iw_request_info *info,
                              union iwreq_data *wrqu,
