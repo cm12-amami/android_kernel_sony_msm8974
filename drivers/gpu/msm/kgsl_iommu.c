@@ -331,7 +331,7 @@ static int kgsl_iommu_fault_handler(struct iommu_domain *domain,
 
 	iommu_dev = get_iommu_device(iommu_unit, dev);
 	if (!iommu_dev) {
-		KGSL_CORE_ERR("Invalid IOMMU device %p\n", dev);
+		KGSL_CORE_ERR("Invalid IOMMU device %pK\n", dev);
 		ret = -ENOSYS;
 		goto done;
 	}
@@ -736,7 +736,7 @@ static void kgsl_detach_pagetable_iommu_domain(struct kgsl_mmu *mmu)
 						iommu_unit->dev[j].dev);
 				iommu_unit->dev[j].attached = false;
 				KGSL_MEM_INFO(mmu->device, "iommu %pK detached "
-					"from user dev of MMU: %p\n",
+					"from user dev of MMU: %pK\n",
 					iommu_pt->domain, mmu);
 			}
 		}
@@ -788,7 +788,7 @@ static int kgsl_attach_pagetable_iommu_domain(struct kgsl_mmu *mmu)
 				}
 				iommu_unit->dev[j].attached = true;
 				KGSL_MEM_INFO(mmu->device,
-				"iommu pt %p attached to dev %pK, ctx_id %d\n",
+				"iommu pt %pK attached to dev %pK, ctx_id %d\n",
 				iommu_pt->domain, iommu_unit->dev[j].dev,
 				iommu_unit->dev[j].ctx_id);
 			}
