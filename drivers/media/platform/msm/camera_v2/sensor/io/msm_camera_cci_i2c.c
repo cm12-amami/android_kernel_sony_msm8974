@@ -26,6 +26,7 @@
 #define I2C_COMPARE_MATCH 0
 #define I2C_COMPARE_MISMATCH 1
 #define I2C_POLL_MAX_ITERATION 20
+#define I2C_REG_DATA_MAX 8192
 
 int32_t msm_camera_cci_i2c_read(struct msm_camera_i2c_client *client,
 	uint32_t addr, uint16_t *data,
