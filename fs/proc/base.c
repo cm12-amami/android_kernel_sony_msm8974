@@ -816,6 +816,10 @@ static ssize_t environ_read(struct file *file, char __user *buf,
 	int ret = -ESRCH;
 	struct mm_struct *mm;
 
+	/* Ensure the process spawned far enough to have an environment. */
+	if (!mm || !mm->env_end)
+		return 0;
+
 	if (!task)
 		goto out_no_task;
 
