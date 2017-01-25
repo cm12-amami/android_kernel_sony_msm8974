@@ -1348,7 +1348,7 @@ static int ion_sync_for_device(struct ion_client *client, int fd)
 	return 0;
 }
 
-static long ion_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+static long ion_ioctl(struct file *filp, unsigned int cmd, unsigned long arg, int id)
 {
 	struct ion_client *client = filp->private_data;
 
@@ -1380,7 +1380,7 @@ static long ion_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		struct ion_handle *handle;
 
 		mutex_lock(&client->lock);
-		handle = ion_handle_get_by_id_nolock(client, data.handle.handle);
+		handle = ion_handle_get_by_id_nolock(client, id);
 		if (IS_ERR(handle)) {
 			mutex_unlock(&client->lock);
 			return PTR_ERR(handle);
