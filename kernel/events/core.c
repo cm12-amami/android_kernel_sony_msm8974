@@ -3150,6 +3150,8 @@ EXPORT_SYMBOL_GPL(perf_event_read_value);
 static int perf_event_read_group(struct perf_event *event,
 				   u64 read_format, char __user *buf)
 {
+	struct perf_event *leader = event->group_leader, *sub;
+	struct perf_event_context *ctx = leader->ctx;
 	int n = 0, size = 0, ret;
 	u64 count, enabled, running;
 	u64 values[5];
