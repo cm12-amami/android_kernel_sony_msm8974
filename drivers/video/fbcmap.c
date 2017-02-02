@@ -300,7 +300,7 @@ int fb_set_user_cmap(struct fb_cmap_user *cmap, struct fb_info *info)
 		goto out;
 	}
 	if (!info->fbops->fb_setcolreg &&
-				!info->fbops->fb_setcmap)) {
+				!info->fbops->fb_setcmap) {
 		rc = -EINVAL;
 		goto out1;
 	}
