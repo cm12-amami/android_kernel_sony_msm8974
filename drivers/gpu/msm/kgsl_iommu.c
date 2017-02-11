@@ -1821,7 +1821,7 @@ kgsl_iommu_map(struct kgsl_pagetable *pt,
 	ret = iommu_map_range(iommu_pt->domain, iommu_virt_addr, memdesc->sg,
 				size, protflags);
 	if (ret) {
-		KGSL_CORE_ERR("iommu_map_range(%x, %pK, %zd, %x) err: %d\n",
+		KGSL_CORE_ERR("iommu_map_range(%pK, %x, %pK, %d, %x) err: %d\n",
 			iommu_pt->domain, iommu_virt_addr, memdesc->sg, size,
 			protflags, ret);
 		return ret;
@@ -1831,7 +1831,7 @@ kgsl_iommu_map(struct kgsl_pagetable *pt,
 				page_to_phys(kgsl_guard_page), PAGE_SIZE,
 				protflags & ~IOMMU_WRITE);
 		if (ret) {
-			KGSL_CORE_ERR("iommu_map(%xz, guard, %x) err: %d\n",
+			KGSL_CORE_ERR("iommu_map(%pK, %x, guard, %x) err: %d\n",
 				iommu_pt->domain, iommu_virt_addr + size,
 				protflags & ~IOMMU_WRITE,
 				ret);
