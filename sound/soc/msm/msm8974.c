@@ -343,6 +343,7 @@ static int msm8974_liquid_ext_spk_power_amp_init(void)
 	return 0;
 }
 
+#ifdef CONFIG_MACH_SONY_RHINE
 static void msm8974_liquid_ext_ult_spk_power_amp_enable(u32 on)
 {
 	if (on) {
@@ -364,6 +365,7 @@ static void msm8974_liquid_ext_ult_spk_power_amp_enable(u32 on)
 	pr_debug("%s: %s external ultrasound SPKR_DRV PAs.\n", __func__,
 			on ? "Enable" : "Disable");
 }
+#endif
 
 static void msm8974_liquid_ext_spk_power_amp_enable(u32 on)
 {
@@ -675,6 +677,7 @@ static int msm_ext_spkramp_event(struct snd_soc_dapm_widget *w,
 
 }
 
+#ifdef CONFIG_MACH_SONY_RHINE
 static int msm_ext_spkramp_ultrasound_event(struct snd_soc_dapm_widget *w,
 			     struct snd_kcontrol *k, int event)
 {
@@ -701,6 +704,7 @@ static int msm_ext_spkramp_ultrasound_event(struct snd_soc_dapm_widget *w,
 
 	return 0;
 }
+#endif
 
 static int msm_snd_enable_codec_ext_clk(struct snd_soc_codec *codec, int enable,
 					bool dapm)
