@@ -396,6 +396,11 @@ void msm_vidc_debugfs_update(struct msm_vidc_inst *inst,
 	}
 }
 
+void msm_vidc_debugfs_init_drv(void)
+{
+	mutex_init(&dbg_buf.lock);
+}
+
 void msm_vidc_debugfs_deinit_drv(void)
 {
 	mutex_destroy(&dbg_buf.lock);
