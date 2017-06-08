@@ -158,6 +158,7 @@ static void netlink_sock_destruct(struct sock *sk)
 	if (nlk->cb) {
 		if (nlk->cb->done)
 			nlk->cb->done(nlk->cb);
+
 		module_put(nlk->cb->module);
 		netlink_destroy_callback(nlk->cb);
 	}
@@ -1445,8 +1446,6 @@ static int netlink_recvmsg(struct kiocb *kiocb, struct socket *sock,
 	}
 #endif
 
-	msg->msg_namelen = 0;
-
 	copied = data_skb->len;
 	if (len < copied) {
 		msg->msg_flags |= MSG_TRUNC;
@@ -1783,6 +1782,7 @@ int __netlink_dump_start(struct sock *ssk, struct sk_buff *skb,
 		return -ECONNREFUSED;
 	}
 	nlk = nlk_sk(sk);
+
 	mutex_lock(nlk->cb_mutex);
 	/* A dump is in progress... */
 	if (nlk->cb) {
