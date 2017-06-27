@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2014, 2017 The Linux Foundation. All rights reserved.
  *
  * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
  *
@@ -124,6 +124,7 @@ void sme_SetFTIEs( tHalHandle hHal, tANI_U8 sessionId, const tANI_U8 *ft_ies,
     {
         case eFT_START_READY:
         case eFT_AUTH_REQ_READY:
+            smsLog( pMac, LOG1, FL("ft_ies_length: %d"), ft_ies_length);
             if ((pMac->ft.ftSmeContext.auth_ft_ies) && 
                     (pMac->ft.ftSmeContext.auth_ft_ies_length))
             {
@@ -146,9 +147,6 @@ void sme_SetFTIEs( tHalHandle hHal, tANI_U8 sessionId, const tANI_U8 *ft_ies,
                           ft_ies,ft_ies_length);
             pMac->ft.ftSmeContext.FTState = eFT_AUTH_REQ_READY;
 
-#if defined WLAN_FEATURE_VOWIFI_11R_DEBUG
-            smsLog( pMac, LOG1, "ft_ies_length=%d", ft_ies_length);
-#endif
             break;
 
         case eFT_AUTH_COMPLETE:
@@ -184,7 +182,7 @@ void sme_SetFTIEs( tHalHandle hHal, tANI_U8 sessionId, const tANI_U8 *ft_ies,
                 vos_mem_free(pMac->ft.ftSmeContext.reassoc_ft_ies);
                 pMac->ft.ftSmeContext.reassoc_ft_ies_length = 0; 
             }
-
+            ft_ies_length = MIN(ft_ies_length, MAX_FTIE_SIZE);
             // Save the FT IEs
             pMac->ft.ftSmeContext.reassoc_ft_ies = vos_mem_malloc(ft_ies_length);
             if ( NULL == pMac->ft.ftSmeContext.reassoc_ft_ies )
