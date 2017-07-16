@@ -158,7 +158,6 @@ struct qseecom_control {
 	uint32_t          qseos_version;
 	uint32_t          qsee_version;
 	struct device *pdev;
-        bool whitelist_support;
 	bool  commonlib_loaded;
 	struct ion_handle *cmnlib_ion_handle;
 	struct ce_hw_usage_info ce_info;
@@ -197,30 +196,6 @@ struct qseecom_listener_handle {
 
 static struct qseecom_control qseecom;
 
-struct sglist_info {
-	uint32_t indexAndFlags;
-	uint32_t sizeOrCount;
-};
-
-/*
- * The 31th bit indicates only one or multiple physical address inside
- * the request buffer. If it is set,  the index locates a single physical addr
- * inside the request buffer, and `sizeOrCount` is the size of the memory being
- * shared at that physical address.
- * Otherwise, the index locates an array of {start, len} pairs (a
- * "scatter/gather list"), and `sizeOrCount` gives the number of entries in
- * that array.
- *
- * The 30th bit indicates 64 or 32bit address; when it is set, physical addr
- * and scatter gather entry sizes are 64-bit values.  Otherwise, 32-bit values.
- *
- * The bits [0:29] of `indexAndFlags` hold an offset into the request buffer.
- */
-#define SGLISTINFO_SET_INDEX_FLAG(c, s, i)	\
-	((uint32_t)(((c & 1) << 31) | ((s & 1) << 30) | (i & 0x3fffffff)))
-
-#define SGLISTINFO_TABLE_SIZE	(sizeof(struct sglist_info) * MAX_ION_FD)
-
 struct qseecom_dev_handle {
 	enum qseecom_client_handle_type type;
 	union {
@@ -234,8 +209,6 @@ struct qseecom_dev_handle {
 	bool  perf_enabled;
 	bool  fast_load_enabled;
 	enum qseecom_bandwidth_request_mode mode;
-	struct sglist_info *sglistinfo_ptr;
-	uint32_t sglist_cnt;
 };
 
 enum qseecom_set_clear_key_flag {
@@ -1509,14 +1482,12 @@ static int __qseecom_send_cmd(struct qseecom_dev_handle *data,
 {
 	int ret = 0;
 	u32 reqd_len_sb_in = 0;
-	struct qseecom_client_send_data_ireq send_data_req = {0};
+	struct qseecom_client_send_data_ireq send_data_req;
 	struct qseecom_command_scm_resp resp;
 	unsigned long flags;
 	struct qseecom_registered_app_list *ptr_app;
 	bool found_app = false;
 	int name_len = 0;
-	void *cmd_buf = NULL;
-        struct sglist_info *table = data->sglistinfo_ptr;
 
 	reqd_len_sb_in = req->cmd_req_len + req->resp_len;
 	/* find app_id & img_name from list */
@@ -1540,6 +1511,7 @@ static int __qseecom_send_cmd(struct qseecom_dev_handle *data,
 		return -EINVAL;
 	}
 
+	send_data_req.qsee_cmd_id = QSEOS_CLIENT_SEND_DATA_COMMAND;
 	send_data_req.app_id = data->client.app_id;
 	send_data_req.req_ptr = (void *)(__qseecom_uvirt_to_kphys(data,
 					(uint32_t)req->cmd_req_buf));
@@ -1547,16 +1519,6 @@ static int __qseecom_send_cmd(struct qseecom_dev_handle *data,
 	send_data_req.rsp_ptr = (void *)(__qseecom_uvirt_to_kphys(data,
 					(uint32_t)req->resp_buf));
 	send_data_req.rsp_len = req->resp_len;
-	send_data_req.sglistinfo_ptr =
-			(uint32_t)virt_to_phys(table);
-	send_data_req.sglistinfo_len = SGLISTINFO_TABLE_SIZE;
-	dmac_flush_range((void *)table,
-			(void *)table + SGLISTINFO_TABLE_SIZE);
-
-	if (qseecom.whitelist_support == false)
-		*(uint32_t *)cmd_buf = QSEOS_CLIENT_SEND_DATA_COMMAND;
-	else
-		*(uint32_t *)cmd_buf = QSEOS_CLIENT_SEND_DATA_COMMAND_WHITELIST;
 
 	msm_ion_do_cache_op(qseecom.ion_clnt, data->client.ihandle,
 					data->client.sb_virt,
@@ -1765,25 +1727,14 @@ static int __qseecom_update_cmd_buf(void *msg, bool cleanup,
 				sg = sg_next(sg);
 			}
 		}
-		if (cleanup) {
+		if (cleanup)
 			msm_ion_do_cache_op(qseecom.ion_clnt,
 					ihandle, NULL, len,
 					ION_IOC_INV_CACHES);
-		} else {
+		else
 			msm_ion_do_cache_op(qseecom.ion_clnt,
 					ihandle, NULL, len,
 					ION_IOC_CLEAN_INV_CACHES);
-			if (data->type == QSEECOM_CLIENT_APP) {
-				data->sglistinfo_ptr[i].indexAndFlags =
-					SGLISTINFO_SET_INDEX_FLAG(
-					(sg_ptr->nents == 1), 0,
-					cmd_req->ifd_data[i].cmd_buf_offset);
-				data->sglistinfo_ptr[i].sizeOrCount =
-					(sg_ptr->nents == 1) ?
-					sg->length : sg_ptr->nents;
-				data->sglist_cnt = i + 1;
-			}
-                } 
 		/* Deallocate the handle */
 		if (!IS_ERR_OR_NULL(ihandle))
 			ion_free(qseecom.ion_clnt, ihandle);
@@ -3679,15 +3630,6 @@ static int qseecom_save_partition_hash(void __user *argp)
 	return 0;
 }
 
-static void __qseecom_clean_data_sglistinfo(struct qseecom_dev_handle *data)
-{
-	if (data->sglist_cnt) {
-		memset(data->sglistinfo_ptr, 0,
-			SGLISTINFO_TABLE_SIZE);
-		data->sglist_cnt = 0;
-	}
-}
-
 static long qseecom_ioctl(struct file *file, unsigned cmd,
 		unsigned long arg)
 {
@@ -3860,7 +3802,6 @@ static long qseecom_ioctl(struct file *file, unsigned cmd,
 		mutex_unlock(&app_access_lock);
 		if (ret)
 			pr_err("failed qseecom_send_cmd: %d\n", ret);
- 		__qseecom_clean_data_sglistinfo(data);
 		break;
 	}
 	case QSEECOM_IOCTL_RECEIVE_REQ: {
@@ -4243,9 +4184,6 @@ static int qseecom_open(struct inode *inode, struct file *file)
 	init_waitqueue_head(&data->abort_wq);
 	atomic_set(&data->ioctl_count, 0);
 
-	data->sglistinfo_ptr = kzalloc(SGLISTINFO_TABLE_SIZE, GFP_KERNEL);
-	if (!(data->sglistinfo_ptr)) 
-                return -ENOMEM;
 	return ret;
 }
 
@@ -4298,7 +4236,6 @@ static int qseecom_release(struct inode *inode, struct file *file)
 		if (data->perf_enabled == true)
 			qsee_disable_clock_vote(data, CLK_DFAB);
 	}
-        kfree(data->sglistinfo_ptr);
 	kfree(data);
 
 	return ret;
@@ -4423,60 +4360,6 @@ static void __qseecom_deinit_clk(enum qseecom_ce_hw_instance ce)
 	}
 }
 
-/*
- * Check if whitelist feature is supported by making a test scm_call
- * to send a whitelist command to an invalid app ID 0
- */
-static int qseecom_check_whitelist_feature(void)
-{
-	struct qseecom_client_send_data_ireq send_data_req = {0};
-	struct qseecom_command_scm_resp resp;
-	uint32_t buf_size = 128;
-	void *buf = NULL;
-	void *cmd_buf = NULL;
-	size_t cmd_len;
-	int ret = 0;
-	phys_addr_t pa;
-
-	buf = kzalloc(buf_size, GFP_KERNEL);
-	if (!buf)
-		return -ENOMEM;
-	pa = virt_to_phys(buf);
-	send_data_req.qsee_cmd_id =
-		QSEOS_CLIENT_SEND_DATA_COMMAND_WHITELIST;
-	send_data_req.app_id = 0;
-	send_data_req.req_ptr = (uint32_t)pa;
-	send_data_req.req_len = buf_size;
-	send_data_req.rsp_ptr = (uint32_t)pa;
-	send_data_req.rsp_len = buf_size;
-	send_data_req.sglistinfo_ptr = (uint32_t)pa;
-	send_data_req.sglistinfo_len = buf_size;
-	cmd_buf = (void *)&send_data_req;
-	cmd_len = sizeof(struct qseecom_client_send_data_ireq);
-
-	ret = scm_call(SCM_SVC_TZSCHEDULER, 1,
-				cmd_buf, cmd_len,
-				&resp, sizeof(resp));
-/*
- * If this cmd exists and whitelist is supported, scm_call return -2 (scm
- * driver remap it to -EINVAL) and resp.result 0xFFFFFFED(-19); Otherwise,
- * scm_call return -1 (remap to -EIO).
- */
-	if (ret == -EIO) {
-		qseecom.whitelist_support = false;
-		ret = 0;
-	} else if (ret == -EINVAL &&
-		resp.result == QSEOS_RESULT_FAIL_SEND_CMD_NO_THREAD) {
-		qseecom.whitelist_support = true;
-		ret = 0;
-	} else {
-		pr_err("Failed to check whitelist: ret = %d, result = 0x%x\n",
-			ret, resp.result);
-	}
-	kfree(buf);
-	return ret;
-}
-
 static int __devinit qseecom_probe(struct platform_device *pdev)
 {
 	int rc;
@@ -4505,8 +4388,6 @@ static int __devinit qseecom_probe(struct platform_device *pdev)
 	qseecom.ce_drv.ce_clk = NULL;
 	qseecom.ce_drv.ce_core_src_clk = NULL;
 	qseecom.ce_drv.ce_bus_clk = NULL;
-
-        qseecom.whitelist_support = true;
 
 	rc = alloc_chrdev_region(&qseecom_device_no, 0, 1, QSEECOM_DEV);
 	if (rc < 0) {
@@ -4718,14 +4599,6 @@ static int __devinit qseecom_probe(struct platform_device *pdev)
 	qseecom.timer_running = false;
 	qseecom.qsee_perf_client = msm_bus_scale_register_client(
 					qseecom_platform_support);
-
-	rc = qseecom_check_whitelist_feature();
-	if (rc) {
-		rc = -EINVAL;
-		goto exit_destroy_ion_client;
-	}
-	pr_warn("qseecom.whitelist_support = %d\n",
-				qseecom.whitelist_support);
 
 	if (!qseecom.qsee_perf_client)
 		pr_err("Unable to register bus client\n");
