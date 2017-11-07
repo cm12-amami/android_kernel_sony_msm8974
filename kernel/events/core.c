@@ -6574,9 +6574,9 @@ static void mutex_lock_double(struct mutex *a, struct mutex *b)
 }
 
 /*
- + * Variation on perf_event_ctx_lock_nested(), except we take two context
- + * mutexes.
- + */
+ * Variation on perf_event_ctx_lock_nested(), except we take two context
+ * mutexes.
+ */
 static struct perf_event_context *__perf_event_ctx_lock_double(struct perf_event *group_leader,
 			     struct perf_event_context *ctx)
 {
