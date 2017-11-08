@@ -47,6 +47,9 @@
 #include "vos_utils.h"
 #endif
 
+/* "Quick & dirty" fix of build error due to backport CVE-2017-11035 */
+#define MIN(a,b) ((a)<(b) ? (a):(b))
+
 /*--------------------------------------------------------------------------
   Initialize the FT context. 
   ------------------------------------------------------------------------*/
