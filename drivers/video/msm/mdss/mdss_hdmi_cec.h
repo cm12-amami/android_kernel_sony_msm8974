@@ -15,6 +15,12 @@
 
 #include "mdss_hdmi_util.h"
 
+
+#define MAX_OPERAND_SIZE	14
+
+/* total size:  HEADER block (1) + opcode block (1) + operands (14) */
+#define MAX_CEC_FRAME_SIZE      (MAX_OPERAND_SIZE + 2)
+
 struct hdmi_cec_init_data {
 	struct workqueue_struct *workq;
 	struct kobject *sysfs_kobj;
