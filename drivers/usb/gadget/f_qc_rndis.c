@@ -1109,114 +1109,74 @@ fail:
 
 static int rndis_qc_open_dev(struct inode *ip, struct file *fp)
 {
-	int ret = 0;
-	unsigned long flags;
 	pr_info("Open rndis QC driver\n");
 
-	spin_lock_irqsave(&rndis_lock, flags);
 	if (!_rndis_qc) {
 		pr_err("rndis_qc_dev not created yet\n");
-		ret = -ENODEV;
-		goto fail;
+		return -ENODEV;
 	}
 
 	if (rndis_qc_lock(&_rndis_qc->open_excl)) {
 		pr_err("Already opened\n");
-		ret = -EBUSY;
-		goto fail;
+		return -EBUSY;
 	}
 
 	fp->private_data = _rndis_qc;
-fail:
-	spin_unlock_irqrestore(&rndis_lock, flags);
-	if (!ret)
-		pr_info("rndis QC file opened\n");
+	pr_info("rndis QC file opened\n");
 
-	return ret;
+	return 0;
 }
 
 static int rndis_qc_release_dev(struct inode *ip, struct file *fp)
 {
-	unsigned long flags;
+	struct f_rndis_qc	*rndis = fp->private_data;
+
 	pr_info("Close rndis QC file");
+	rndis_qc_unlock(&rndis->open_excl);
 
-	spin_lock_irqsave(&rndis_lock, flags);
-
-	if (!_rndis_qc) {
-		pr_err("rndis_qc_dev not present\n");
-		spin_unlock_irqrestore(&rndis_lock, flags);
-		return -ENODEV;
-	}
-	rndis_qc_unlock(&_rndis_qc->open_excl);
-	spin_unlock_irqrestore(&rndis_lock, flags);
 	return 0;
 }
 
 static long rndis_qc_ioctl(struct file *fp, unsigned cmd, unsigned long arg)
 {
-	u8 qc_max_pkt_per_xfer = 0;
-	u32 qc_max_pkt_size = 0;
+	struct f_rndis_qc	*rndis = fp->private_data;
 	int ret = 0;
-	unsigned long flags;
-
-	spin_lock_irqsave(&rndis_lock, flags);
-	if (!_rndis_qc) {
-		pr_err("rndis_qc_dev not present\n");
-		ret = -ENODEV;
-		goto fail;
-	}
-
-	qc_max_pkt_per_xfer = _rndis_qc->ul_max_pkt_per_xfer;
-	qc_max_pkt_size = _rndis_qc->max_pkt_size;
-
-	if (rndis_qc_lock(&_rndis_qc->ioctl_excl)) {
-		ret = -EBUSY;
-		goto fail;
-	}
-
-	spin_unlock_irqrestore(&rndis_lock, flags);
 
 	pr_info("Received command %d", cmd);
+
+	if (rndis_qc_lock(&rndis->ioctl_excl))
+		return -EBUSY;
 
 	switch (cmd) {
 	case RNDIS_QC_GET_MAX_PKT_PER_XFER:
 		ret = copy_to_user((void __user *)arg,
-					&qc_max_pkt_per_xfer,
-					sizeof(qc_max_pkt_per_xfer));
+					&rndis->max_pkt_per_xfer,
+					sizeof(rndis->max_pkt_per_xfer));
 		if (ret) {
 			pr_err("copying to user space failed");
 			ret = -EFAULT;
 		}
 		pr_info("Sent max packets per xfer %d",
-				qc_max_pkt_per_xfer);
+				rndis->max_pkt_per_xfer);
 		break;
 	case RNDIS_QC_GET_MAX_PKT_SIZE:
 		ret = copy_to_user((void __user *)arg,
-					&qc_max_pkt_size,
-					sizeof(qc_max_pkt_size));
+					&rndis->max_pkt_size,
+					sizeof(rndis->max_pkt_size));
 		if (ret) {
 			pr_err("copying to user space failed");
 			ret = -EFAULT;
 		}
 		pr_debug("Sent max packet size %d",
-				qc_max_pkt_size);
+				rndis->max_pkt_size);
 		break;
 	default:
 		pr_err("Unsupported IOCTL");
 		ret = -EINVAL;
 	}
 
-	spin_lock_irqsave(&rndis_lock, flags);
- 
-	if (!_rndis_qc) {
-		pr_err("rndis_qc_dev not present\n");
-		ret = -ENODEV;
-		goto fail;
-	}
-	rndis_qc_unlock(&_rndis_qc->ioctl_excl);
+	rndis_qc_unlock(&rndis->ioctl_excl);
 
-fail:
-	spin_unlock_irqrestore(&rndis_lock, flags);
 	return ret;
 }
 
@@ -1238,8 +1198,6 @@ static int rndis_qc_init(void)
 	int ret;
 
 	pr_info("initialize rndis QC instance\n");
-
-	spin_lock_init(&rndis_lock);
 
 	ret = misc_register(&rndis_qc_device);
 	if (ret)
