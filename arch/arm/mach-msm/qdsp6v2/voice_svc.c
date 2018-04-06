@@ -639,7 +639,6 @@ static int voice_svc_remove(struct platform_device *pdev)
 	device_destroy(voice_svc_class, device_num);
 	class_destroy(voice_svc_class);
 	unregister_chrdev_region(0, MINOR_NUMBER);
-	kfree(voice_svc_dev);
 
 	return 0;
 }
