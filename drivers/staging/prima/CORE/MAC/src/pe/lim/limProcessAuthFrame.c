@@ -463,7 +463,7 @@ limProcessAuthFrame(tpAniSirGlobal pMac, tANI_U8 *pRxPacketInfo, tpPESession pse
                     }
 
                     if ( ( sirConvertAuthFrame2Struct(pMac, plainBody, frameLen-8,
-                         &rxAuthFrame)!=eSIR_SUCCESS ) ||
+                         rxAuthFrame)!=eSIR_SUCCESS ) ||
                          ( !isAuthValid(pMac, rxAuthFrame,psessionEntry) ) )
                     {
                         PELOGE(limLog(pMac, LOGE,
