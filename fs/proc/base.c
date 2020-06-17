@@ -220,10 +220,10 @@ static int proc_pid_cmdline(struct task_struct *task, char * buffer)
 		goto out_mm;	/* Shh! No looking before we're done */
 
  	len = mm->arg_end - mm->arg_start;
- 
+
 	if (len > PAGE_SIZE)
 		len = PAGE_SIZE;
- 
+
 	res = access_process_vm(task, mm->arg_start, buffer, len, 0);
 
 	// If the nul at the end of args has been overwritten, then
@@ -814,11 +814,7 @@ static ssize_t environ_read(struct file *file, char __user *buf,
 	char *page;
 	unsigned long src = *ppos;
 	int ret = -ESRCH;
-	struct mm_struct *mm = file->private_data;
-
-	/* Ensure the process spawned far enough to have an environment. */
-	if (!mm || !mm->env_end)
-		return 0;
+	struct mm_struct *mm;
 
 	if (!task)
 		goto out_no_task;
@@ -991,7 +987,7 @@ static int oom_adjust_permission(struct inode *inode, int mask)
 	}
 
 	/*
-	 * System Server (uid == 1000) is granted access to oom_adj of all 
+	 * System Server (uid == 1000) is granted access to oom_adj of all
 	 * android applications (uid > 10000) as and services (uid >= 1000)
 	 */
 	if (p && (current_fsuid() == 1000) && (uid >= 1000)) {
@@ -2486,7 +2482,7 @@ out:
 	return error;
 }
 
-static struct dentry *proc_pident_lookup(struct inode *dir, 
+static struct dentry *proc_pident_lookup(struct inode *dir,
 					 struct dentry *dentry,
 					 const struct pid_entry *ents,
 					 unsigned int nents)
